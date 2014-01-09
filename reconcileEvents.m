@@ -3,7 +3,7 @@ function reconcileEvents(processingEvts, neuralynxEvts, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Convert events file and raw output from Sebastien's processing GUI
 %
-% Input: 
+% Input:
 %
 %   processingEvts =
 %   '/Users/McCool/Dropbox/AS_Graybiel/fsm001_d2_r1/RAW_fsm001_d2_r1.txt'
@@ -14,18 +14,29 @@ function reconcileEvents(processingEvts, neuralynxEvts, varargin)
 %   varargin if specified will allow for the following format of
 %   <processingEvts> and <neuralynxEvts>. If <varargin> is empty, you
 %   can still enter the following values so long as your working directory
-%   has the necessary files to be converted. 
+%   has the necessary files to be converted.
 %
 %   processingEvts = 'RAW_fsm001_d2_r1.txt'
-% 
+%
 %   neuralynxEvts = 'events.mat'
 %
 % Output:
-% 
+%
 %   events_reconciled.mat - an events file containing timestamps adjusted
 %   to the Cheetah clock values, TTLs, and any associated VALUES.
 %
+%   events_timeSlipStats.mat - contains the time differences associated
+%   between logged events in the Cheetah acquisition system, as well as the
+%   Processing acquisition system. <timestampSlippage> - a list of timing
+%   differences (in seconds) , <histAX, n, bin> - variables containing
+%   information required to plot the associated timestamp slippage overview
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Specify 1 if you want timing differences to be presented on the fly
+plotSlippage = 0;
+
+startPath = pwd;
 
 if ~isempty(varargin)
     relativePath = varargin{1};
@@ -50,7 +61,7 @@ if any(diff(processingEvents(:,1)) < 0)
         warning(['Fix for timestamps did not work. Check the number of' ...
             'resets found in the data. Function needs to be updated to ' ...
             'handle this error.'])
-    end 
+    end
 end
 
 % Load the Neuralynx events
@@ -121,10 +132,36 @@ new_procVAL(curIdxRange) = processingEvents(curIdxRange,3);
 
 % Check for drift between Processing Events file and Neuralynx Events file.
 
+timestampSlippage = diff(...
+    diff([processingEvents(cheetahClock_Idx,1) 1e6*evts(:,2)],[],1) ...
+    ,[],2)./1e6;
+histAX = linspace(min(timestampSlippage),max(timestampSlippage),100);
+[n, bin] = histc(timestampSlippage,histAX);
+
+if plotSlippage == 1
+    figure;
+    subplot(2,1,1)
+    set(gca,'fontsize',13)
+    bar(histAX,n)
+    axis square
+    title('Timing Differences Between Acquisition Systems')
+    xlabel('Time Slip (seconds)')
+    ylabel('Count')
+    subplot(2,1,2)
+    set(gca,'fontsize',13)
+    plot(1:length(timestampSlippage),timestampSlippage,'.')
+    axis tight
+    title('Timing Difference Across Recording')
+    xlabel('Cheetah Clock Synch. Number')
+    ylabel('Time Difference (seconds)')
+end
 
 % Save events
 
 events = [new_procTS new_procTTL new_procVAL];
+eval(['cd ' relativePath])
 save events_reconciled.mat events
+save events_timeSlipStats.mat timestampSlippage histAX n bin
+eval(['cd ' startPath])
 
 end
