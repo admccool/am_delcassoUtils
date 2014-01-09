@@ -82,5 +82,22 @@ if any(max(data,[],2) > 1)
 end
 
 % 2. Pre-allocate storage for cross-correlations
+maxLagTimes = .300; % +/- 300ms for cross-correlations
+maxLags = maxLagTimes/binSize;
+ccAllUnits = zeros(nUnits,nUnits,2*maxLags + 1);
+if (maxLags - round(maxLags)) ~= 0
+   error('computeCC_allUnits:argChk', ...
+       ['binSize and maxLagTimes are not commensurate with one ' ...
+       'another, please specify a commensurate pair.'])
+end
+
+% 3. Compute and store cross-correlation values (and auto-correlation
+% values for sanity's sake)
+for uNum_i = 1:nUnits-1
+    for uNum_j = uNum_i:nUnits
+        ccAllUnits(uNum_i,uNum_j,:) = xcorr(data(uNum_i,:),data(uNum_j,:),...
+            maxLags,'unbiased');
+    end
+end
 
 end
