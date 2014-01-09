@@ -49,6 +49,7 @@ function computeCC_allUnits(spikeFile, eventsFile, fLoc, varargin)
 % each unit in the data set (nUnits x nUnits x nLags)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+startPath = pwd;
 
 % 1. Load spike data and events file
 if isempty(fLoc)
@@ -93,11 +94,20 @@ end
 
 % 3. Compute and store cross-correlation values (and auto-correlation
 % values for sanity's sake)
-for uNum_i = 1:nUnits-1
+% Ran a test w/ 38 units, calculation takes approximately 40 minutes, I
+% should eventually switch this calculation to a ChunkyII based calculation 
+h = waitbar(0,'Calcuating correlations');
+for uNum_i = 1:nUnits
     for uNum_j = uNum_i:nUnits
         ccAllUnits(uNum_i,uNum_j,:) = xcorr(data(uNum_i,:),data(uNum_j,:),...
             maxLags,'unbiased');
     end
+    waitbar(uNum_i/nUnits)
 end
+close all hidden
+
+eval(['cd ' fLoc])
+save ccAllUnits.mat ccAllUnits
+eval(['cd ' startPath])
 
 end
