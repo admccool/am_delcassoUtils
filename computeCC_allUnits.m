@@ -1,3 +1,5 @@
+function computeCC_allUnits(spikeFile, eventsFile, fLoc, varargin)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   DESCRIPTION
 %
 % Compute and save cross-correlograms for all spike-trains in a given data 
@@ -16,7 +18,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   WORKFLOW
 %
-% 1. Load spike data
+% 1. Load spike data and events file
 %
 % 2. Pre-allocate storage for cross-correlations
 %
@@ -47,3 +49,38 @@
 % each unit in the data set (nUnits x nUnits x nLags)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 1. Load spike data and events file
+if isempty(fLoc)
+    spikeData = spikeFile;
+    eventsData = eventsFile;
+else
+    s = load([fLoc filesep spikeFile]);
+    sNames = fieldnames(s);
+    eval(['spikeData = s.' sNames{1} ';'])
+    s = load([fLoc filesep eventsFile]);
+    sNames = fieldnames(s);
+    eval(['eventsData = s.' sNames{1} ';'])
+    clear s sNames
+end
+
+% 1a. Construct Binned Spike Trains
+binSize = 1e-3;
+nUnits = max(spikeData(:,2));
+timeRange = 0:binSize:ceil(max(spikeData(:,1)));
+data = zeros(nUnits,length(timeRange));
+for uNum = 1:nUnits
+    data(uNum,:) = histc(spikeData(spikeData(:,2) == uNum,1),timeRange);
+end
+
+% 1b. Check to see if any units have spikes falling within a 'refractory
+% period' of 1ms
+if any(max(data,[],2) > 1)
+    uIDX = find(max(data,[],2) > 1);
+    warning(['Unit(s) ' num2str(reshape(uIDX,1,[])) ...
+        ' have spikes occuring within 1ms of each other'])
+end
+
+% 2. Pre-allocate storage for cross-correlations
+
+end
