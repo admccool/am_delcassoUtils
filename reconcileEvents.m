@@ -119,6 +119,11 @@ new_procTS(curIdxRange) = evts(size(evts,1),2) + TS_offset;
 new_procTTL(curIdxRange) = processingEvents(curIdxRange,2);
 new_procVAL(curIdxRange) = processingEvents(curIdxRange,3);
 
+% Check for drift between Processing Events file and Neuralynx Events file.
+
+
+% Save events
+
 events = [new_procTS new_procTTL new_procVAL];
 save events_reconciled.mat events
 
