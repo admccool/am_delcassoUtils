@@ -2,7 +2,7 @@ function am_syncProcessing2Cheetah(dataDir)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Convert events file and raw output from Sebastien's processing GUI
 %
-%                                                                   EXAMPLE
+% EX
 % Input:
 % dataDir = '/Users/adm/Dropbox/AS_Graybiel/q001_d1_r1';
 %
